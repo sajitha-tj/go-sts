@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/sajitha-tj/go-sts/internal/repository"
+	"github.com/sajitha-tj/go-sts/setup"
 )
 
 type Storage struct {
@@ -19,6 +20,11 @@ func NewStorage() *Storage {
 	db, err := sql.Open("postgres", "user=oauth password=secret dbname=oauthdb sslmode=disable")
 	if err != nil {
 		log.Fatalf("Error opening database: %v", err)
+	}
+
+	// Initialize the temporary database
+	if err := setup.NewTestDB(db).Initialize(); err != nil {
+		log.Fatalf("Error initializing temporary database: %v", err)
 	}
 
 	clientStore := repository.NewClientStore(db)
