@@ -6,6 +6,7 @@ import (
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/compose"
 
+	"github.com/sajitha-tj/go-sts/config"
 	"github.com/sajitha-tj/go-sts/internal/storage"
 )
 
@@ -14,7 +15,7 @@ type OAuthService struct {
 }
 
 func NewOauthService(storage *storage.Storage) *OAuthService {
-	var secret = []byte("my super secret signing password")
+	var secret = []byte(config.GetConfigInstance().SIGNING_SECRET)
 	var config = &fosite.Config{
 		AccessTokenLifespan: time.Minute * 30,
 		GlobalSecret:        secret,
