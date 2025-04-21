@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_USER: oauth
+      POSTGRES_PASSWORD: secret
+      POSTGRES_DB: oauthdb
+    ports:
+      - "5432:5432"
+    networks:
+      - oauth_network
+
+networks:
+  oauth_network:
+    driver: bridge
