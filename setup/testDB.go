@@ -1,5 +1,9 @@
 package setup
 
+// This is a temporary database setup for testing purposes.
+// It creates a set of tables and populates them with test data.
+// Data are stored in a PostgreSQL database, and the database connection is passed as a parameter.
+
 import (
 	"database/sql"
 	"log"

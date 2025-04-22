@@ -2,16 +2,17 @@ package lib
 
 import (
 	"context"
-	"crypto/rand"
-	"crypto/rsa"
 	"log"
+
+	"github.com/sajitha-tj/go-sts/setup"
 )
 
 func KeyGetter(ctx context.Context) (interface{}, error) {
-	keys, err := rsa.GenerateKey(rand.Reader, 2048)
-	if err != nil {
-		log.Fatal("Error generating RSA key:", err)
-		return nil, err
+	releaseId := ctx.Value("releaseId").(string)
+	privateKey, exists := setup.GetTempIssuerDBInstance().GetPrivateKey(releaseId)
+	if !exists {
+		log.Printf("Private key not found for release ID: %s", releaseId)
+		return nil, nil
 	}
-	return keys, nil
+	return privateKey, nil
 }
