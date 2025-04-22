@@ -45,12 +45,18 @@ func readConfigFromFile(filePath string) string {
 type Config struct {
 	PORT string
 	SIGNING_SECRET string
+	DB_USER string
+	DB_PASSWORD string
+	DB_NAME string
 }
 // newConfig initializes a new Config instance with values from environment variables.
 func newConfig() *Config {
 	return &Config{
 		PORT: getConfigFromEnvWithDefault("PORT", "8080"),
 		SIGNING_SECRET: readConfigFromFile(getConfigFromEnv("SIGNING_SECRET_FILE_PATH")),
+		DB_USER: getConfigFromEnv("DB_USER"),
+		DB_PASSWORD: getConfigFromEnv("DB_PASSWORD"),
+		DB_NAME: getConfigFromEnv("DB_NAME"),
 	}
 }
 
