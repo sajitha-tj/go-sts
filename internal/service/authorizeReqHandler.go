@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/ory/fosite"
+	"github.com/sajitha-tj/go-sts/internal/lib"
 )
 
 func (s *OAuthService) HandleAuthorizationRequest(ctx context.Context, w http.ResponseWriter, req *http.Request) {
@@ -25,11 +26,13 @@ func (s *OAuthService) HandleAuthorizationRequest(ctx context.Context, w http.Re
 		s.oauth2Provider.WriteAuthorizeError(ctx, w, ar, err)
 	}
 	// check scopes...
+	for _, scope := range ar.GetRequestedScopes() {
+		log.Println("Requested scope:", scope, " granting..")
+		ar.GrantScope(scope)
+	}
 
 	// user is authenticated, then...
-	mySessionData := &fosite.DefaultSession{
-		Username: req.Form.Get("username"),
-	}
+	mySessionData := lib.NewSession(req.Form.Get("username"))
 
 	response, err := s.oauth2Provider.NewAuthorizeResponse(ctx, ar, mySessionData)
 	if err != nil {

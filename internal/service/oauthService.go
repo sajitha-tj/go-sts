@@ -7,6 +7,7 @@ import (
 	"github.com/ory/fosite/compose"
 
 	"github.com/sajitha-tj/go-sts/config"
+	"github.com/sajitha-tj/go-sts/internal/lib"
 	"github.com/sajitha-tj/go-sts/internal/storage"
 )
 
@@ -19,15 +20,15 @@ func NewOauthService(storage *storage.Storage) *OAuthService {
 	var config = &fosite.Config{
 		AccessTokenLifespan: time.Minute * 30,
 		GlobalSecret:        secret,
-		// can add new issuer
+		SendDebugMessagesToClients: true,
 	}
 
 	oauth2Provider := compose.Compose(
 		config,
 		storage,
-		compose.NewOAuth2HMACStrategy(config),
+		// compose.NewOAuth2HMACStrategy(config),
+		compose.NewOAuth2JWTStrategy(lib.KeyGetter, compose.NewOAuth2HMACStrategy(config), config),
 		compose.OAuth2AuthorizeExplicitFactory,
-		// compose.OAuth2ClientCredentialsGrantFactory,
 	)
 
 	return &OAuthService{

@@ -18,21 +18,16 @@ func main() {
 		w.Header().Set("Content-Type", "application/json")
 
 		responseBodyData := make(map[string]string)
-		// error handling
+
 		if r.URL.Query().Get("error") != "" {
-			// send json error response
 			w.WriteHeader(http.StatusUnauthorized)
-			responseBodyData = map[string]string{
-				"error":             r.URL.Query().Get("error"),
-				"error_description": r.URL.Query().Get("error_description"),
-			}
 		} else {
-			// success response: send all URL query params as JSON
 			w.WriteHeader(http.StatusOK)
-			for key, values := range r.URL.Query() {
-				if len(values) > 0 {
-					responseBodyData[key] = values[0]
-				}
+		}
+		
+		for key, values := range r.URL.Query() {
+			if len(values) > 0 {
+				responseBodyData[key] = values[0]
 			}
 		}
 
