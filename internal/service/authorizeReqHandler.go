@@ -27,7 +27,6 @@ func (s *OAuthService) HandleAuthorizationRequest(ctx context.Context, w http.Re
 	}
 	// check scopes...
 	for _, scope := range ar.GetRequestedScopes() {
-		log.Println("Requested scope:", scope, " granting..")
 		ar.GrantScope(scope)
 	}
 

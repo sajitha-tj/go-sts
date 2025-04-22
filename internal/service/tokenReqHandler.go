@@ -23,11 +23,6 @@ func (s *OAuthService) HandleTokenRequest(ctx context.Context, w http.ResponseWr
 	if mySessionData.Username == "peter" {
 		// do something...
 	}
-	// check scopes...
-	for _, scope := range accessRequest.GetRequestedScopes() {
-		log.Println("Requested scope:", scope, " granting..")
-		accessRequest.GrantScope(scope)
-	}
 
 	response, err := s.oauth2Provider.NewAccessResponse(ctx, accessRequest)
 	if err != nil {
@@ -35,7 +30,6 @@ func (s *OAuthService) HandleTokenRequest(ctx context.Context, w http.ResponseWr
 		s.oauth2Provider.WriteAccessError(ctx, w, accessRequest, err)
 		return
 	}
-	log.Println("response:", response.ToMap())
 
 	// All done, send the response.
 	s.oauth2Provider.WriteAccessResponse(ctx, w, accessRequest, response)
