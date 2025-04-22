@@ -32,7 +32,7 @@ func NewSession(user string) *oauth2.JWTSession {
 		Username: user,
 		JWTClaims: &jwt.JWTClaims{
 			Subject: user,
-			Issuer:  "https://example.com",
+			// Issuer:  "https://example.com",
 		},
 	}
 }

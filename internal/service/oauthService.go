@@ -17,17 +17,19 @@ type OAuthService struct {
 
 func NewOauthService(storage *storage.Storage) *OAuthService {
 	var secret = []byte(config.GetConfigInstance().SIGNING_SECRET)
-	var config = &fosite.Config{
-		AccessTokenLifespan: time.Minute * 30,
-		GlobalSecret:        secret,
+	var fositeConfigs = &fosite.Config{
+		AccessTokenLifespan:        time.Minute * 30,
+		GlobalSecret:               secret,
 		SendDebugMessagesToClients: true,
 	}
 
+	var jwtConfig = &config.JwtConfig{Config: *fositeConfigs}
+
 	oauth2Provider := compose.Compose(
-		config,
+		fositeConfigs,
 		storage,
 		// compose.NewOAuth2HMACStrategy(config),
-		compose.NewOAuth2JWTStrategy(lib.KeyGetter, compose.NewOAuth2HMACStrategy(config), config),
+		compose.NewOAuth2JWTStrategy(lib.KeyGetter, compose.NewOAuth2HMACStrategy(jwtConfig), jwtConfig),
 		compose.OAuth2AuthorizeExplicitFactory,
 	)
 
