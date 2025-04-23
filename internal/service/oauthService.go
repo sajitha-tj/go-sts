@@ -28,9 +28,9 @@ func NewOauthService(storage *storage.Storage) *OAuthService {
 	oauth2Provider := compose.Compose(
 		fositeConfigs,
 		storage,
-		// compose.NewOAuth2HMACStrategy(config),
 		compose.NewOAuth2JWTStrategy(lib.KeyGetter, compose.NewOAuth2HMACStrategy(jwtConfig), jwtConfig),
 		compose.OAuth2AuthorizeExplicitFactory,
+		compose.OAuth2ClientCredentialsGrantFactory,
 	)
 
 	return &OAuthService{
