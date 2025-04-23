@@ -9,7 +9,7 @@ import (
 )
 
 func KeyGetter(ctx context.Context) (interface{}, error) {
-	issuerId := ctx.Value(config.CTX_KEY_ISSUER).(string)
+	issuerId := ctx.Value(config.CTX_ISSUER_ID_KEY).(string)
 	privateKey, exists := setup.GetTempIssuerDBInstance().GetPrivateKey(issuerId)
 	if !exists {
 		log.Printf("Private key not found for issuer ID: %s", issuerId)

@@ -1,3 +1,3 @@
 package config
 
-const CTX_KEY_ISSUER = "issuer"
+const CTX_ISSUER_ID_KEY = "issuer"

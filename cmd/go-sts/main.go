@@ -9,13 +9,14 @@ import (
 
 	"github.com/sajitha-tj/go-sts/config"
 	"github.com/sajitha-tj/go-sts/internal/controller"
+	"github.com/sajitha-tj/go-sts/internal/middleware"
 	"github.com/sajitha-tj/go-sts/internal/service"
 	"github.com/sajitha-tj/go-sts/internal/storage"
 )
 
 func main() {
+	// Initialization
 	config := config.GetConfigInstance()
-
 	storage := storage.NewStorage()
 	defer storage.Close()
 	oauthService := service.NewOauthService(storage)
@@ -23,6 +24,11 @@ func main() {
 
 	// Set up the router
 	r := mux.NewRouter()
+
+	// Middlewares
+	r.Use(middleware.CtxMiddleware)
+
+	// Define the routes
 	r.HandleFunc("/authorize", oauthController.AuthorizeEndpointController).Methods("POST")
 	r.HandleFunc("/token", oauthController.TokenEndpointController).Methods("POST")
 
