@@ -1,7 +1,8 @@
 package setup
 
 // This is a temporary issuer database that is used for testing purposes.
-// It keeps a list of issuers and their corresponding private keys with respective release IDs.
+// It keeps a list of issuers and their corresponding private keys with respective issuer IDs.
+// issuer ID is a UUID and is sent in the request as part of the host.
 // Database is hardcoded and stored in memory.
 
 import (
@@ -45,14 +46,14 @@ func GetTempIssuerDBInstance() *TempIssuerDB {
 	return tempIssuerDB
 }
 
-// GetIssuer retrieves the issuer URL for a given release ID.
-func (db *TempIssuerDB) GetIssuer(releaseId string) (string, bool) {
-	issuer, exists := db.issuers[releaseId]
+// GetIssuer retrieves the issuer URL for a given issuer ID.
+func (db *TempIssuerDB) GetIssuer(issuerId string) (string, bool) {
+	issuer, exists := db.issuers[issuerId]
 	return issuer, exists
 }
 
-// GetPrivateKey retrieves the private key for a given release ID.
-func (db *TempIssuerDB) GetPrivateKey(releaseId string) (*rsa.PrivateKey, bool) {
-	privateKey, exists := db.keyMap[releaseId]
+// GetPrivateKey retrieves the private key for a given issuer ID.
+func (db *TempIssuerDB) GetPrivateKey(issuerId string) (*rsa.PrivateKey, bool) {
+	privateKey, exists := db.keyMap[issuerId]
 	return privateKey, exists
 }

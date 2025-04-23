@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/sajitha-tj/go-sts/config"
 	"github.com/sajitha-tj/go-sts/internal/lib"
 	"github.com/sajitha-tj/go-sts/internal/service"
 )
@@ -32,14 +33,14 @@ func (c *OAuthController) TokenEndpointController(w http.ResponseWriter, r *http
 func (c *OAuthController) handleRequest(w http.ResponseWriter, r *http.Request, handler func(context.Context, http.ResponseWriter, *http.Request)) {
 	ctx := r.Context()
 
-	// Add releaseId to context
-	releaseId, err := lib.GetReleaseId(r.Host)
+	// Add issuerId to context
+	issuerId, err := lib.GetIssuerId(r.Host)
 	if err != nil {
-		log.Println("Error getting releaseId:", err)
+		log.Println("Error getting issuerId:", err)
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	ctx = context.WithValue(ctx, "releaseId", releaseId)
+	ctx = context.WithValue(ctx, config.CTX_KEY_ISSUER, issuerId)
 
 	r = r.WithContext(ctx)
 	handler(ctx, w, r)

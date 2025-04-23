@@ -13,10 +13,10 @@ type JwtConfig struct {
 }
 
 func (c *JwtConfig) GetAccessTokenIssuer(ctx context.Context) string {
-	relaseId := ctx.Value("releaseId").(string)
-	issuer, exists := setup.GetTempIssuerDBInstance().GetIssuer(relaseId)
+	issuerId := ctx.Value(CTX_KEY_ISSUER).(string)
+	issuer, exists := setup.GetTempIssuerDBInstance().GetIssuer(issuerId)
 	if !exists {
-		log.Printf("Issuer not found for release ID: %s", relaseId)
+		log.Printf("No valid issuer for the ID: %s", issuerId)
 		return "default-issuer"
 	}
 	return issuer
