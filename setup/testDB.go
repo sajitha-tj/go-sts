@@ -33,7 +33,7 @@ func (t *TestDB) Initialize() error {
 	if err := t.createTables(); err != nil {
 		return err
 	}
-	if err := t.addData(); err != nil {
+	if err := t.populateTables(); err != nil {
 		return err
 	}
 	log.Println("Database initialized with test data.")
@@ -65,7 +65,7 @@ func (t *TestDB) createTables() error {
 			active BOOLEAN,
 			code TEXT,
 			requested_at TIMESTAMP,
-			session_id TEXT,
+			session_data JSONB,
 			client_id TEXT
 		)
 		`,
@@ -75,7 +75,7 @@ func (t *TestDB) createTables() error {
 			active BOOLEAN,
 			signature TEXT,
 			requested_at TIMESTAMP,
-			session_id TEXT,
+			session_data JSONB,
 			client_id TEXT
 		)
 		`,
@@ -85,7 +85,7 @@ func (t *TestDB) createTables() error {
 			active BOOLEAN,
 			signature TEXT,
 			requested_at TIMESTAMP,
-			session_id TEXT,
+			session_data JSONB,
 			client_id TEXT
 		)
 		`,
@@ -120,23 +120,23 @@ func (t *TestDB) createTables() error {
 	return nil
 }
 
-func (t *TestDB) addData() error {
+func (t *TestDB) populateTables() error {
 	queries := []string{
-		`
-		INSERT INTO ` + AuthorizationCodeSessionsTable + ` (id, active, code, requested_at, session_id, client_id)
-		VALUES ('auth_code_1', true, 'code123', CURRENT_TIMESTAMP, 'session_1', 'client_1')
-		ON CONFLICT DO NOTHING
-		`,
-		`
-		INSERT INTO ` + AccessTokenSessionsTable + ` (id, active, signature, requested_at, session_id, client_id)
-		VALUES ('access_token_1', true, 'signature123', CURRENT_TIMESTAMP, 'session_1', 'client_1')
-		ON CONFLICT DO NOTHING
-		`,
-		`
-		INSERT INTO ` + RefreshTokenSessionsTable + ` (id, active, signature, requested_at, session_id, client_id)
-		VALUES ('refresh_token_1', true, 'signature456', CURRENT_TIMESTAMP, 'session_1', 'client_1')
-		ON CONFLICT DO NOTHING
-		`,
+		// `
+		// INSERT INTO ` + AuthorizationCodeSessionsTable + ` (id, active, code, requested_at, session_data, client_id)
+		// VALUES ('auth_code_1', true, 'code123', CURRENT_TIMESTAMP, 'session_1', 'client_1')
+		// ON CONFLICT DO NOTHING
+		// `,
+		// `
+		// INSERT INTO ` + AccessTokenSessionsTable + ` (id, active, signature, requested_at, session_data, client_id)
+		// VALUES ('access_token_1', true, 'signature123', CURRENT_TIMESTAMP, 'session_1', 'client_1')
+		// ON CONFLICT DO NOTHING
+		// `,
+		// `
+		// INSERT INTO ` + RefreshTokenSessionsTable + ` (id, active, signature, requested_at, session_data, client_id)
+		// VALUES ('refresh_token_1', true, 'signature456', CURRENT_TIMESTAMP, 'session_1', 'client_1')
+		// ON CONFLICT DO NOTHING
+		// `,
 		`
 		INSERT INTO ` + UsersTable + ` (id, username, password, created_at)
 		VALUES ('user_1', 'peter', 'secret', CURRENT_TIMESTAMP)

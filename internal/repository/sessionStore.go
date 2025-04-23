@@ -3,9 +3,11 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"log"
 	"time"
 
 	"github.com/ory/fosite"
+	"github.com/sajitha-tj/go-sts/internal/lib"
 )
 
 const (
@@ -43,21 +45,27 @@ func (ss *SessionStore) CreateSession(ctx context.Context, payload string, sessi
 	switch sessionType {
 	case AuthorizationCodeSessionType:
 		query = `
-            INSERT INTO authorization_code_sessions (id, active, code, requested_at, session_id, client_id)
+            INSERT INTO authorization_code_sessions (id, active, code, requested_at, session_data, client_id)
             VALUES ($1, $2, $3, $4, $5, $6)
         `
 	case AccessTokenSessionType:
 		query = `
-            INSERT INTO access_token_sessions (id, active, signature, requested_at, session_id, client_id)
+            INSERT INTO access_token_sessions (id, active, signature, requested_at, session_data, client_id)
             VALUES ($1, $2, $3, $4, $5, $6)
         `
 	case RefreshTokenSessionType:
 		query = `
-            INSERT INTO refresh_token_sessions (id, active, signature, requested_at, session_id, client_id)
+            INSERT INTO refresh_token_sessions (id, active, signature, requested_at, session_data, client_id)
             VALUES ($1, $2, $3, $4, $5, $6)
         `
 	default:
 		return fosite.ErrInvalidRequest
+	}
+
+	sessionData, e := lib.GetSerializedSession(request.GetSession())
+	if e != nil {
+		log.Println("Error serializing session data:", e)
+		return e
 	}
 
 	_, err := ss.db.ExecContext(
@@ -67,7 +75,7 @@ func (ss *SessionStore) CreateSession(ctx context.Context, payload string, sessi
 		true, // Active
 		payload,
 		time.Now(),
-		request.GetSession().GetUsername(),
+		sessionData,
 		request.GetClient().GetID(),
 	)
 	if err != nil {
@@ -81,19 +89,19 @@ func (s *SessionStore) GetSession(ctx context.Context, payload string, sessionTy
 	switch sessionType {
 	case AuthorizationCodeSessionType:
 		query = `
-			SELECT id, active, code, requested_at, client_id
+			SELECT id, active, code, requested_at, session_data, client_id
 			FROM authorization_code_sessions
 			WHERE code = $1 AND active = true
 		`
 	case AccessTokenSessionType:
 		query = `
-			SELECT id, active, signature, requested_at, client_id
+			SELECT id, active, signature, requested_at, session_data, client_id
 			FROM access_token_sessions
 			WHERE signature = $1 AND active = true
 		`
 	case RefreshTokenSessionType:
 		query = `
-			SELECT id, active, signature, requested_at, client_id
+			SELECT id, active, signature, requested_at, session_data, client_id
 			FROM refresh_token_sessions
 			WHERE signature = $1 AND active = true
 		`
@@ -102,11 +110,11 @@ func (s *SessionStore) GetSession(ctx context.Context, payload string, sessionTy
 	}
 
 	row := s.db.QueryRowContext(ctx, query, payload)
-	var id, clientID string
+	var id, clientID, sessionData string
 	var active bool
 	var requestedAt time.Time
 
-	err := row.Scan(&id, &active, &payload, &requestedAt, &clientID)
+	err := row.Scan(&id, &active, &payload, &requestedAt, &sessionData, &clientID)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, fosite.ErrNotFound
@@ -114,10 +122,15 @@ func (s *SessionStore) GetSession(ctx context.Context, payload string, sessionTy
 		return nil, err
 	}
 
+	if err := lib.DeserializeSession(sessionData, session); err != nil {
+		log.Println("Error deserializing session data:", err)
+		return nil, err
+	}
+
 	request := fosite.NewRequest()
 	request.ID = id
 	request.Client = &fosite.DefaultClient{ID: clientID}
-	request.Session = session
+	request.SetSession(session)
 	request.RequestedAt = requestedAt
 
 	return request, nil
@@ -156,34 +169,6 @@ func (s *SessionStore) InvalidateSession(ctx context.Context, payload string, se
 }
 
 func (s *SessionStore) RotateRefreshToken(ctx context.Context, requestID string, refreshTokenSignature string) error {
-	// Delete the current refresh token
-	deleteQuery := `
-		DELETE FROM refresh_token_sessions
-		WHERE signature = $1
-	`
-	_, err := s.db.ExecContext(ctx, deleteQuery, refreshTokenSignature)
-	if err != nil {
-		return err
-	}
-
-	// Generate a new refresh token
-	insertQuery := `
-		INSERT INTO refresh_token_sessions (id, active, signature, requested_at, session_id, client_id)
-		VALUES ($1, $2, $3, $4, $5, $6)
-	`
-	_, err = s.db.ExecContext(
-		ctx,
-		insertQuery,
-		requestID,
-		true,                  // Active
-		refreshTokenSignature, // Use the same signature or generate a new one as needed
-		time.Now(),
-		requestID, // Assuming session_id is the same as requestID
-		"",        // Assuming client_id is not required here, replace with actual value if needed
-	)
-	if err != nil {
-		return err
-	}
-
+	// Implement logic to rotate the refresh token
 	return nil
 }

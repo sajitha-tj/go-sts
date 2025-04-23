@@ -1,6 +1,9 @@
 package lib
 
 import (
+	"encoding/json"
+
+	"github.com/ory/fosite"
 	"github.com/ory/fosite/handler/oauth2"
 	"github.com/ory/fosite/token/jwt"
 )
@@ -35,4 +38,16 @@ func NewSession(user string) *oauth2.JWTSession {
 			// Issuer:  "https://example.com",
 		},
 	}
+}
+
+func GetSerializedSession(session fosite.Session) (string, error) {
+	sessionData, err := json.Marshal(session)
+	if err != nil {
+		return "", err
+	}
+	return string(sessionData), nil
+}
+
+func DeserializeSession(sessionData string, session fosite.Session) error {
+	return json.Unmarshal([]byte(sessionData), &session)
 }

@@ -20,8 +20,8 @@ func (s *OAuthService) HandleTokenRequest(ctx context.Context, w http.ResponseWr
 		return
 	}
 
-	if mySessionData.Username == "peter" {
-		// do something...
+	if mySessionData.GetUsername() == "peter" {
+		log.Println("hey pete!")
 	}
 
 	response, err := s.oauth2Provider.NewAccessResponse(ctx, accessRequest)
