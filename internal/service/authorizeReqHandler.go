@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/ory/fosite"
 	"github.com/sajitha-tj/go-sts/internal/lib"
 )
 
@@ -18,14 +17,19 @@ func (s *OAuthService) HandleAuthorizationRequest(ctx context.Context, w http.Re
 		return
 	}
 
-	// check if the user is logged in and gives his consent
-	// for now, checking if username is 'peter'
-	if req.Form.Get("username") != "peter" || req.Form.Get("password") != "secret" {
-		log.Println("User not authenticated")
-		err := fosite.ErrInvalidClient.WithDescription("Invalid credentials")
-		s.oauth2Provider.WriteAuthorizeError(ctx, w, ar, err)
+	// Check if the user is authenticated (if !authenticated: return)
+	if !handleAuthentication(w, req, AuthenticationData{
+		ResponseType: ar.GetResponseTypes()[0],
+		ClientID:     ar.GetClient().GetID(),
+		RedirectURI:  ar.GetRedirectURI().String(),
+		Scope:        ar.GetRequestedScopes()[0],
+		State:        ar.GetState(),
+		Nonce:        "random_nonce",
+	}) {
+		return
 	}
-	// check scopes...
+
+	// Check requested scopes
 	for _, scope := range ar.GetRequestedScopes() {
 		ar.GrantScope(scope)
 	}

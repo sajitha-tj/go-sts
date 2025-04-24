@@ -29,6 +29,7 @@ func main() {
 	r.Use(middleware.CtxMiddleware)
 
 	// Define the routes
+	r.HandleFunc("/authorize", oauthController.AuthorizeEndpointController).Methods("GET")
 	r.HandleFunc("/authorize", oauthController.AuthorizeEndpointController).Methods("POST")
 	r.HandleFunc("/token", oauthController.TokenEndpointController).Methods("POST")
 
