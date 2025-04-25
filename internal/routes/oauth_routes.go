@@ -12,15 +12,15 @@ import (
 )
 
 // OAuthRoutes sets up the OAuth2 routes for the given router, with the specified path prefix.
-func OAuthRoutes(router *mux.Router, path string, provider *fosite.OAuth2Provider) {
+func OAuthRoutes(router *mux.Router, path string, service *authentication_service.AuthenticationService, provider *fosite.OAuth2Provider) {
 	routes := router.PathPrefix(path).Subrouter()
 
-	routes.HandleFunc("/authorize", authorizeHandler(*provider)).Methods("GET", "POST")
+	routes.HandleFunc("/authorize", authorizeHandler(*service, *provider)).Methods("GET", "POST")
 	routes.HandleFunc("/token", tokenHandler(*provider)).Methods("POST")
 }
 
 // authorizeHandler handles the authorization request and response.
-func authorizeHandler(provider fosite.OAuth2Provider) http.HandlerFunc {
+func authorizeHandler(service authentication_service.AuthenticationService, provider fosite.OAuth2Provider) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
 		log.Println("Handling authorization request")
@@ -32,7 +32,7 @@ func authorizeHandler(provider fosite.OAuth2Provider) http.HandlerFunc {
 		}
 
 		// Check if the user is authenticated (if !authenticated: return)
-		if !authentication_service.HandleAuthentication(w, r, authentication_service.AuthenticationData{
+		if !service.HandleAuthentication(w, r, authentication_service.AuthenticationData{
 			ResponseType: ar.GetResponseTypes()[0],
 			ClientID:     ar.GetClient().GetID(),
 			RedirectURI:  ar.GetRedirectURI().String(),
@@ -95,13 +95,16 @@ func tokenHandler(provider fosite.OAuth2Provider) http.HandlerFunc {
 	}
 }
 
+
 // newSession creates a new JWT session with the given user.
 func newSession(user string) *oauth2.JWTSession {
 	return &oauth2.JWTSession{
 		Username: user,
 		JWTClaims: &jwt.JWTClaims{
 			Subject: user,
-			// Issuer:  "https://example.com",
+			Extra: map[string]interface{}{
+				"extra_claim": "extra_value_of_" + user,
+			},
 		},
 	}
 }

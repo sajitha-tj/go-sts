@@ -5,14 +5,15 @@ import (
 	"github.com/ory/fosite"
 	"github.com/sajitha-tj/go-sts/internal/middleware"
 	"github.com/sajitha-tj/go-sts/internal/routes"
+	"github.com/sajitha-tj/go-sts/internal/service/authentication_service"
 	"github.com/sajitha-tj/go-sts/internal/service/oauth_provider"
 	"github.com/sajitha-tj/go-sts/internal/storage"
 )
 
 type AppDependencies struct {
 	// authService
-	oauthProvider fosite.OAuth2Provider
-	storage       *storage.Storage
+	oauthProvider         fosite.OAuth2Provider
+	authenticationService authentication_service.AuthenticationService
 }
 
 func MakeAPIServer() (*mux.Router, error) {
@@ -25,7 +26,7 @@ func MakeAPIServer() (*mux.Router, error) {
 
 	r.Use(middleware.CtxMiddleware)
 
-	routes.OAuthRoutes(r, "/", &deps.oauthProvider)
+	routes.OAuthRoutes(r, "/", &deps.authenticationService , &deps.oauthProvider)
 
 	return r, nil
 }
@@ -35,8 +36,9 @@ func initializeAppDependencies() (*AppDependencies, error) {
 	// GetConfigs() etc..
 	storage := storage.NewStorage()
 	oauthProvider := oauth_provider.NewOauthProvider(storage)
+	authenticationService := authentication_service.NewAuthenticationService(storage.GetUserStore())
 	return &AppDependencies{
 		oauthProvider: oauthProvider,
-		storage:       storage,
+		authenticationService: *authenticationService,
 	}, nil
 }

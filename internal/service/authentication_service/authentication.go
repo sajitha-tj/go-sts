@@ -4,6 +4,8 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+
+	"github.com/sajitha-tj/go-sts/internal/repository/user_repository"
 )
 
 const TEMPLATES_DIR = "/home/sajithaj/my-sts-project/go-sts/internal/templates"
@@ -17,12 +19,22 @@ type AuthenticationData struct {
 	Nonce        string
 }
 
-func HandleAuthentication(w http.ResponseWriter, r *http.Request, data AuthenticationData) bool {
+type AuthenticationService struct {
+	userStore *user_repository.UserStore
+}
+
+func NewAuthenticationService(userStore *user_repository.UserStore) *AuthenticationService {
+	return &AuthenticationService{
+		userStore: userStore,
+	}
+}
+
+func (s *AuthenticationService) HandleAuthentication(w http.ResponseWriter, r *http.Request, data AuthenticationData) bool {
 	if r.Method == http.MethodPost {
 		username := r.Form.Get("username")
 		password := r.Form.Get("password")
 
-		if authenticateUser(username, password) {
+		if s.authenticateUser(username, password) {
 			return true
 		} else {
 			http.Error(w, "Invalid username or password", http.StatusUnauthorized)
@@ -35,11 +47,16 @@ func HandleAuthentication(w http.ResponseWriter, r *http.Request, data Authentic
 }
 
 // authenticateUser checks the provided username and password against the stored credentials.
-func authenticateUser(username string, password string) bool {
-	if username == "peter" && password == "secret" {
-		return true
+func (s *AuthenticationService) authenticateUser(username string, password string) bool {
+	user, err := s.userStore.GetUserByUsername(username)
+	if err != nil {
+		log.Printf("Error retrieving user: %v", err)
+		return false
 	}
-	return false
+	if user == nil || user.Password != password {
+		return false
+	}
+	return true
 }
 
 // renderLoginPage renders the login page with the provided authentication data.

@@ -7,6 +7,7 @@ import (
 	"github.com/sajitha-tj/go-sts/internal/configs"
 	"github.com/sajitha-tj/go-sts/internal/repository/client_repository"
 	"github.com/sajitha-tj/go-sts/internal/repository/session_repository"
+	"github.com/sajitha-tj/go-sts/internal/repository/user_repository"
 	"github.com/sajitha-tj/go-sts/setup"
 )
 
@@ -14,6 +15,7 @@ type Storage struct {
 	dbConnector  *sql.DB
 	clientStore  *client_repository.ClientStore
 	sessionStore *session_repository.SessionStore
+	userStore    *user_repository.UserStore
 }
 
 // NewStorage initializes a new Storage instance with a database connection and stores.
@@ -36,11 +38,13 @@ func NewStorage() *Storage {
 
 	clientStore := client_repository.NewClientStore(db)
 	sessionStore := session_repository.NewSessionStore(db)
+	userStore := user_repository.NewUserStore(db)
 
 	return &Storage{
 		dbConnector:  db,
 		clientStore:  clientStore,
 		sessionStore: sessionStore,
+		userStore:    userStore,
 	}
 }
 
@@ -51,4 +55,16 @@ func (s *Storage) Close() {
 		log.Printf("Error closing database connection: %v", err)
 	}
 	log.Println("Database connection closed successfully")
+}
+
+func (s *Storage) GetClientStore() *client_repository.ClientStore {
+	return s.clientStore
+}
+
+func (s *Storage) GetSessionStore() *session_repository.SessionStore {
+	return s.sessionStore
+}
+
+func (s *Storage) GetUserStore() *user_repository.UserStore {
+	return s.userStore
 }
