@@ -6,8 +6,7 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/ory/fosite"
-	"github.com/ory/fosite/handler/oauth2"
-	"github.com/ory/fosite/token/jwt"
+	"github.com/sajitha-tj/go-sts/internal/lib"
 	"github.com/sajitha-tj/go-sts/internal/service/authentication_service"
 )
 
@@ -17,6 +16,7 @@ func OAuthRoutes(router *mux.Router, path string, service *authentication_servic
 
 	routes.HandleFunc("/authorize", authorizeHandler(*service, *provider)).Methods("GET", "POST")
 	routes.HandleFunc("/token", tokenHandler(*provider)).Methods("POST")
+	routes.HandleFunc("/introspect", introspectHandler(*provider)).Methods("POST")
 }
 
 // authorizeHandler handles the authorization request and response.
@@ -49,7 +49,7 @@ func authorizeHandler(service authentication_service.AuthenticationService, prov
 		}
 
 		// user is authenticated, then...
-		mySessionData := newSession(r.Form.Get("username"))
+		mySessionData := lib.NewSession(r.Form.Get("username"))
 
 		response, err := provider.NewAuthorizeResponse(ctx, ar, mySessionData)
 		if err != nil {
@@ -69,7 +69,7 @@ func tokenHandler(provider fosite.OAuth2Provider) http.HandlerFunc {
 		ctx := r.Context()
 		log.Println("token request received")
 		// Create an empty session object that will be passed to storage implementation to populate (unmarshal) the session into.
-		mySessionData := newSession("")
+		mySessionData := lib.NewSession("")
 
 		accessRequest, err := provider.NewAccessRequest(ctx, r, mySessionData)
 		if err != nil {
@@ -80,6 +80,11 @@ func tokenHandler(provider fosite.OAuth2Provider) http.HandlerFunc {
 
 		if mySessionData.GetUsername() == "peter" {
 			log.Println("hey pete!")
+		}
+
+		// Check requested scopes
+		for _, scope := range accessRequest.GetRequestedScopes() {
+			accessRequest.GrantScope(scope)
 		}
 
 		response, err := provider.NewAccessResponse(ctx, accessRequest)
@@ -95,16 +100,20 @@ func tokenHandler(provider fosite.OAuth2Provider) http.HandlerFunc {
 	}
 }
 
+// introspectHandler handles the introspection request and response.
+func introspectHandler(provider fosite.OAuth2Provider) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ctx := r.Context()
+		log.Println("introspection request received")
+		mySessionData := lib.NewSession("")
+		responder, err := provider.NewIntrospectionRequest(ctx, r, mySessionData)
+		if err != nil {
+			log.Println("Error creating introspection request:", err)
+			provider.WriteIntrospectionError(ctx, w, err)
+			return
+		}
 
-// newSession creates a new JWT session with the given user.
-func newSession(user string) *oauth2.JWTSession {
-	return &oauth2.JWTSession{
-		Username: user,
-		JWTClaims: &jwt.JWTClaims{
-			Subject: user,
-			Extra: map[string]interface{}{
-				"extra_claim": "extra_value_of_" + user,
-			},
-		},
+		provider.WriteIntrospectionResponse(ctx, w, responder)
+		log.Println("introspection response sent")
 	}
 }

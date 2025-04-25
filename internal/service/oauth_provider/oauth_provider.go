@@ -30,6 +30,7 @@ func NewOauthProvider(storage *storage.Storage) fosite.OAuth2Provider {
 		compose.NewOAuth2JWTStrategy(keyGetter, compose.NewOAuth2HMACStrategy(jwtConfig), jwtConfig),
 		compose.OAuth2AuthorizeExplicitFactory,
 		compose.OAuth2ClientCredentialsGrantFactory,
+		compose.OAuth2StatelessJWTIntrospectionFactory,
 	)
 
 	return oauth2Provider
