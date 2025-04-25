@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"log"
 
-	"github.com/sajitha-tj/go-sts/internal/configs"
 	"github.com/sajitha-tj/go-sts/internal/repository/client_repository"
 	"github.com/sajitha-tj/go-sts/internal/repository/session_repository"
 	"github.com/sajitha-tj/go-sts/internal/repository/user_repository"
@@ -20,17 +19,7 @@ type Storage struct {
 
 // NewStorage initializes a new Storage instance with a database connection and stores.
 // Storage instance is responsible for managing the database connection and providing access to the client, user and session stores.
-func NewStorage() *Storage {
-	dbUser := configs.GetConfig().Database.Username
-	dbPassword := configs.GetConfig().Database.Password
-	dbName := configs.GetConfig().Database.Name
-	sslMode := configs.GetConfig().Database.SSLMode
-
-	db, err := sql.Open("postgres", "user="+dbUser+" password="+dbPassword+" dbname="+dbName+" sslmode="+sslMode)
-	if err != nil {
-		log.Fatalf("Error opening database: %v", err)
-	}
-
+func NewStorage(db *sql.DB) *Storage {
 	// Initialize the temporary database
 	if err := setup.NewTestDB(db).Initialize(); err != nil {
 		log.Fatalf("Error initializing temporary database: %v", err)

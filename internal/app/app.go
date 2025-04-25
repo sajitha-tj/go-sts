@@ -3,6 +3,8 @@ package app
 import (
 	"github.com/gorilla/mux"
 	"github.com/ory/fosite"
+	"github.com/sajitha-tj/go-sts/internal/configs"
+	"github.com/sajitha-tj/go-sts/internal/db"
 	"github.com/sajitha-tj/go-sts/internal/middleware"
 	"github.com/sajitha-tj/go-sts/internal/routes"
 	"github.com/sajitha-tj/go-sts/internal/service/authentication_service"
@@ -32,11 +34,18 @@ func MakeAPIServer() (*mux.Router, error) {
 }
 
 func initializeAppDependencies() (*AppDependencies, error) {
-	// Initialize dependencies here
-	// GetConfigs() etc..
-	storage := storage.NewStorage()
+	config := configs.GetConfig()
+
+	db, err := db.New(&config.Database)
+	if err != nil {
+		return nil, err
+	}
+	
+	storage := storage.NewStorage(db)
+	
 	oauthProvider := oauth_provider.NewOauthProvider(storage)
 	authenticationService := authentication_service.NewAuthenticationService(storage.GetUserStore())
+	
 	return &AppDependencies{
 		oauthProvider: oauthProvider,
 		authenticationService: *authenticationService,
