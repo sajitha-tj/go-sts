@@ -38,7 +38,10 @@ func NewOauthProvider(storage *storage.Storage) fosite.OAuth2Provider {
 // keyGetter is a function that retrieves the private key needed to sign JWT tokens.
 // It is used by fosite to sign the tokens. This implementation returns private keys based on the issuer.
 func keyGetter(ctx context.Context) (interface{}, error) {
-	issuer := ctx.Value(configs.CTX_ISSUER_KEY).(issuer_repository.Issuer)
+	issuer, ok := ctx.Value(configs.CTX_ISSUER_KEY).(issuer_repository.Issuer)
+	if !ok {
+		return nil, fosite.ErrServerError.WithHint("Failed to retrieve issuer from context")
+	}
 	return issuer.PrivateKey, nil
 }
 
