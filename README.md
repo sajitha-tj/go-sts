@@ -102,7 +102,7 @@ To run the project, you need to have the following installed:
 
 ### Auth Code Flow
 
-1. Open your browser and navigate to the `http://localhost:3846` URL. You can start the Authorization Code flow by clicking the "Authorize" button.
+1. Open your browser and navigate to the [`http://localhost:3846`](http://localhost:3846) URL. You can start the Authorization Code flow by clicking the "Authorize" button.
 2. You will be redirected to the authorization server, where you can log in and authorize the client application. Use the following credentials:
    - **Username**: `peter`
    - **Password**: `secret`
