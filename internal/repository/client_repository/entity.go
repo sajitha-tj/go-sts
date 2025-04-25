@@ -1,4 +1,4 @@
-package model
+package client_repository
 
 import (
 	"github.com/ory/fosite"

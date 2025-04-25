@@ -18,6 +18,22 @@ import (
 const CLIENT_ID = "my-client"
 const CLIENT_SECRET = "foobar"
 
+const RESPONSE_TYPE = "code"
+const REDIRECT_URI = "http://localhost:3846/callback"
+const SCOPE = "fosite+openid+photos+offline"
+const STATE = "random-state-value"
+const NONCE = "random-nonce-value"
+
+const AUTHORIZATION_URL = "http://123e4567-e89b-12d3-a456-426614174000.localhost:8080/authorize?" +
+						"response_type=" + RESPONSE_TYPE +
+						"&client_id=" + CLIENT_ID +
+						"&redirect_uri=" + REDIRECT_URI +
+						"&scope=" + SCOPE +
+						"&state=" + STATE +
+						"&nonce=" + NONCE
+
+const TOKEN_URL = "http://123e4567-e89b-12d3-a456-426614174000.localhost:8080/token"
+
 var authCode string
 
 func main() {
@@ -45,7 +61,7 @@ func handleIndex(w http.ResponseWriter, r *http.Request) {
 		</head>
 		<body>
 			<h1>Welcome to the OAuth2 Client</h1>
-			<a href="http://123e4567-e89b-12d3-a456-426614174000.localhost:8080/authorize?response_type=code&client_id=my-client&redirect_uri=http://localhost:3846/callback&scope=fosite+openid+photos+offline&state=random-state-value&nonce=random-nonce-value&code_challenge=example-code-challenge&code_challenge_method=S256">Authorize</a>
+			<a href="` + AUTHORIZATION_URL + `">Authorize</a>
 		</body>
 		</html>
 	`))
@@ -93,15 +109,13 @@ func handleGetToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	tokenURL := "http://123e4567-e89b-12d3-a456-426614174000.localhost:8080/token"
-
 	data := url.Values{}
 	data.Set("code", authCode)
 	data.Set("grant_type", "authorization_code")
 	data.Set("client_id", CLIENT_ID)
 	data.Set("client_secret", CLIENT_SECRET)
 
-	req, err := http.NewRequest("POST", tokenURL, bytes.NewBufferString(data.Encode()))
+	req, err := http.NewRequest("POST", TOKEN_URL, bytes.NewBufferString(data.Encode()))
 	if err != nil {
 		log.Printf("Error creating request: %v", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)

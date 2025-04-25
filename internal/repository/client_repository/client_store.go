@@ -1,12 +1,10 @@
-package repository
+package client_repository
 
 import (
 	"context"
 	"database/sql"
 	"errors"
 	"time"
-
-	"github.com/sajitha-tj/go-sts/internal/repository/model"
 )
 
 type ClientStore struct {
@@ -19,8 +17,8 @@ func NewClientStore(db *sql.DB) *ClientStore {
 }
 
 // GetClient loads the client by its ID or returns an error if the client does not exist or another error occurred.
-func (cs *ClientStore) GetClient(ctx context.Context, id string) (model.Client, error) {
-	var client model.Client
+func (cs *ClientStore) GetClient(ctx context.Context, id string) (Client, error) {
+	var client Client
 	query := `
 		SELECT id, secret, rotated_secrets, redirect_uris, grant_types, 
 		       response_types, scopes, public, audience 
@@ -38,9 +36,9 @@ func (cs *ClientStore) GetClient(ctx context.Context, id string) (model.Client, 
 	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return model.Client{}, errors.New("client not found")
+			return Client{}, errors.New("client not found")
 		}
-		return model.Client{}, err
+		return Client{}, err
 	}
 	return client, nil
 }

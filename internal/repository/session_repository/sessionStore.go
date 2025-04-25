@@ -1,13 +1,13 @@
-package repository
+package session_repository
 
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"log"
 	"time"
 
 	"github.com/ory/fosite"
-	"github.com/sajitha-tj/go-sts/internal/lib"
 )
 
 const (
@@ -15,22 +15,6 @@ const (
 	AccessTokenSessionType       = "access_token"
 	RefreshTokenSessionType      = "refresh_token"
 )
-
-type AuthorizationCodeSession struct {
-	ID          string
-	Active      bool
-	Code        string
-	RequestedAt time.Time
-	ClientID    string
-}
-
-type TokenSession struct {
-	ID          string
-	Active      bool
-	Signature   string
-	RequestedAt time.Time
-	ClientID    string
-}
 
 type SessionStore struct {
 	db *sql.DB
@@ -62,7 +46,7 @@ func (ss *SessionStore) CreateSession(ctx context.Context, payload string, sessi
 		return fosite.ErrInvalidRequest
 	}
 
-	sessionData, e := lib.GetSerializedSession(request.GetSession())
+	sessionData, e := getSerializedSession(request.GetSession())
 	if e != nil {
 		log.Println("Error serializing session data:", e)
 		return e
@@ -122,7 +106,7 @@ func (s *SessionStore) GetSession(ctx context.Context, payload string, sessionTy
 		return nil, err
 	}
 
-	if err := lib.DeserializeSession(sessionData, session); err != nil {
+	if err := deserializeSession(sessionData, session); err != nil {
 		log.Println("Error deserializing session data:", err)
 		return nil, err
 	}
@@ -171,4 +155,16 @@ func (s *SessionStore) InvalidateSession(ctx context.Context, payload string, se
 func (s *SessionStore) RotateRefreshToken(ctx context.Context, requestID string, refreshTokenSignature string) error {
 	// Implement logic to rotate the refresh token
 	return nil
+}
+
+func getSerializedSession(session fosite.Session) (string, error) {
+	sessionData, err := json.Marshal(session)
+	if err != nil {
+		return "", err
+	}
+	return string(sessionData), nil
+}
+
+func deserializeSession(sessionData string, session fosite.Session) error {
+	return json.Unmarshal([]byte(sessionData), &session)
 }

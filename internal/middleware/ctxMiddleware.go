@@ -2,28 +2,48 @@ package middleware
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
-	
-	"github.com/sajitha-tj/go-sts/config"
-	"github.com/sajitha-tj/go-sts/internal/lib"
+	"strings"
+
+	"github.com/google/uuid"
+	"github.com/sajitha-tj/go-sts/internal/configs"
 )
 
 // ctxMiddleware enriches the request context with required data.
-// Values added to the context:
+// Following values are added to the context:
 //   - issuerId: The issuerId extracted from the request's Host header.
 func CtxMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Add issuerId to the context of the requst
-		issuerId, err := lib.GetIssuerId(r.Host)
+		issuerId, err := getIssuerId(r.Host)
 		if err != nil {
 			log.Println("Error occured while trying to read issuerId:", err)
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		ctx := context.WithValue(r.Context(), config.CTX_ISSUER_ID_KEY, issuerId)
+		ctx := context.WithValue(r.Context(), configs.CTX_ISSUER_ID_KEY, issuerId)
 		r = r.WithContext(ctx)
 
 		next.ServeHTTP(w, r)
 	})
+}
+
+func getIssuerId(host string) (string, error) {
+	// slice from . and get the first element
+	hostParts := strings.Split(host, ".")
+	if len(hostParts) == 0 {
+		return "", fmt.Errorf("invalid host: %s", host)
+	}
+	issuerId := hostParts[0]
+	// check if issuerId is empty
+	if issuerId == "" {
+		return "", fmt.Errorf("invalid host: %s", host)
+	}
+	// check if issuerId is a valid UUID
+	if _, err := uuid.Parse(issuerId); err != nil {
+		return "", fmt.Errorf("invalid issuerId: %s", issuerId)
+	}
+	return issuerId, nil
 }

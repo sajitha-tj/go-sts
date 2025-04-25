@@ -3,6 +3,8 @@ module github.com/sajitha-tj/go-sts
 go 1.24.2
 
 require (
+	github.com/caarlos0/env/v11 v11.3.1
+	github.com/google/uuid v1.3.1
 	github.com/gorilla/mux v1.8.1
 	github.com/joho/godotenv v1.4.0
 	github.com/lib/pq v1.10.9
@@ -26,7 +28,6 @@ require (
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/mock v1.6.0 // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
-	github.com/google/uuid v1.3.1 // indirect
 	github.com/gorilla/websocket v1.5.0 // indirect
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.18.1 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect

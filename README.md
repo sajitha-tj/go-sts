@@ -11,23 +11,36 @@ The service supports the following OAuth2 grant types:
 
 ```plaintext
 go-sts/
-├── cmd/                     # Main entry point for the application
+├── cmd/                             # Main entry point for the application
 │   └── go-sts/
-│       └── main.go          # Application startup logic
+│       └── main.go                  # Application entry point
 ├── internal/
-│   ├── controller/          # HTTP controllers for handling API endpoints
-│   ├── lib/                 # Utility libraries (e.g., JSON handling)
-│   ├── repository/          # Database models and data access logic
-│   ├── service/             # Business logic and OAuth2 service implementation
-│   ├── storage/             # Database connection and storage management
-├── setup/                   # Setup scripts for testing and database initialization
-│   ├──clientServer/         # Sample client to help handle redirects
-│   ├── testDB.go            # Database setup for testing
-├──                          # Go module dependencies
-├── docker-compose.yaml      # Docker configuration for PostgreSQL
-├── go.mod                  # Go module file
-├── go.sum                  # Go module dependencies
-└── README.md               # Project documentation
+│   ├── app/
+│   │   └── app.go                   # Application initialization and configuration
+│   ├── configs/                     # Configuration management, including constants and loading environment variables
+│   ├── lib/                         # Utility libraries
+│   ├── middleware/                  # Middleware for HTTP requests
+│   │   └── ctxMiddleware.go         # Context middleware
+│   ├── repository/
+│   │   ├── client_repository/       # Client repository logic
+│   │   ├── issuer_repository/       # Issuer repository logic
+│   │   ├── session_repository/      # Session repository logic
+│   │   └── user_repository/         # User repository logic
+│   ├── routes/
+│   │   └── oauth_routes.go          # OAuth2 related routes
+│   ├── service/
+│   │   ├── authentication_service/  # User authentication related services
+│   │   └── oauth_provider/          # Fosite OAuth2 provider setup
+│   └── storage/                     # Fosite's storage interface implementation
+|   └── templates/                   # HTML templates for rendering
+├── resources/                       # Resource files
+├── setup/
+│   └── testDB.go                    # Test database setup
+├── client/                          # OAuth2 client for testing
+├── docker-compose.yaml              # Docker Compose configuration
+├── go.mod
+├── .env
+└── README.md
 ```
 
 ## Prerequisites
@@ -59,12 +72,11 @@ To run the project, you need to have the following installed:
    - Create a `.env` file in the root directory and add the following variables:
 
    ```plaintext
-   DB_USER=oauth
-   DB_PASSWORD=secret
-   DB_NAME=oauthdb
-
    PORT=8080
-   SIGNING_SECRET_FILE_PATH=/home/sajithaj/my-sts-project/go-sts/sign_secret.txt
+   DB_USERNAME=oauth
+   DB_PASSWORD_FILE=/home/sajithaj/my-sts-project/go-sts/resources/db_password
+   DB_NAME=oauthdb
+   FOSITE_SECRET_FILE=/home/sajithaj/my-sts-project/go-sts/resources/sign_secret
    ```
 
 4. Install the dependencies:
@@ -88,23 +100,23 @@ To run the project, you need to have the following installed:
 
 ## Testing
 
-### Authorize request
+### Auth Code Flow
 
-Following request will return the auth code to the redirect_uri.
+1. Open your browser and navigate to the `http://localhost:3846` URL. You can start the Authorization Code flow by clicking the "Authorize" button.
+2. You will be redirected to the authorization server, where you can log in and authorize the client application. Use the following credentials:
+   - **Username**: `peter`
+   - **Password**: `secret`
+3. After successful authentication, you will be redirected back to the client server with an authorization code.
+4. Click on "Get Token" to exchange the authorization code for an access token.
+
+### Client Credentials Flow
+
+Use the following curl command to test the Client Credentials flow:
 
 ```bash
-curl --location 'localhost:8080/authorize' \
+curl --location '123e4567-e89b-12d3-a456-426614174000.localhost:8080/token' \
 --header 'Content-Type: application/x-www-form-urlencoded' \
---data-urlencode 'response_type=code' \
+--data-urlencode 'grant_type=client_credentials' \
 --data-urlencode 'client_id=my-client' \
---data-urlencode 'redirect_uri=http://localhost:3846/callback' \
---data-urlencode 'scope=fosite openid photos offline' \
---data-urlencode 'state=random-state-value' \
---data-urlencode 'nonce=random-nonce-value' \
---data-urlencode 'code_challenge=example-code-challenge' \
---data-urlencode 'code_challenge_method=S256' \
---data-urlencode 'username=peter' \
---data-urlencode 'password=secret'
+--data-urlencode 'client_secret=foobar'
 ```
-
-### Token request

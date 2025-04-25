@@ -1,12 +1,12 @@
-package service
+package authentication_service
 
 import (
 	"html/template"
 	"log"
 	"net/http"
-
-	"github.com/sajitha-tj/go-sts/config"
 )
+
+const TEMPLATES_DIR = "/home/sajithaj/my-sts-project/go-sts/internal/templates"
 
 type AuthenticationData struct {
 	ResponseType string
@@ -17,7 +17,7 @@ type AuthenticationData struct {
 	Nonce        string
 }
 
-func handleAuthentication(w http.ResponseWriter, r *http.Request, data AuthenticationData) bool {
+func HandleAuthentication(w http.ResponseWriter, r *http.Request, data AuthenticationData) bool {
 	if r.Method == http.MethodPost {
 		username := r.Form.Get("username")
 		password := r.Form.Get("password")
@@ -44,7 +44,7 @@ func authenticateUser(username string, password string) bool {
 
 // renderLoginPage renders the login page with the provided authentication data.
 func renderLoginPage(w http.ResponseWriter, data AuthenticationData) {
-	tmpl, err := template.ParseFiles(config.TEMPLATES_DIR + "/login.html")
+	tmpl, err := template.ParseFiles(TEMPLATES_DIR + "/login.html")
 	if err != nil {
 		log.Printf("Error parsing template: %v", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)

@@ -4,38 +4,28 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
 
-	"github.com/sajitha-tj/go-sts/config"
-	"github.com/sajitha-tj/go-sts/internal/controller"
-	"github.com/sajitha-tj/go-sts/internal/middleware"
-	"github.com/sajitha-tj/go-sts/internal/service"
-	"github.com/sajitha-tj/go-sts/internal/storage"
+	"github.com/sajitha-tj/go-sts/internal/configs"
+	"github.com/sajitha-tj/go-sts/internal/app"
 )
 
 func main() {
-	// Initialization
-	config := config.GetConfigInstance()
-	storage := storage.NewStorage()
-	defer storage.Close()
-	oauthService := service.NewOauthService(storage)
-	oauthController := controller.NewOAuthController(oauthService)
+	// Configs
+	if err := configs.LoadConfigs(); err != nil {
+		log.Fatal("Error loading configs:", err)
+	}
 
-	// Set up the router
-	r := mux.NewRouter()
+	app, err := app.MakeAPIServer()
+	if err != nil {
+		log.Fatal("Error creating API server:", err)
+	}
 
-	// Middlewares
-	r.Use(middleware.CtxMiddleware)
-
-	// Define the routes
-	r.HandleFunc("/authorize", oauthController.AuthorizeEndpointController).Methods("GET")
-	r.HandleFunc("/authorize", oauthController.AuthorizeEndpointController).Methods("POST")
-	r.HandleFunc("/token", oauthController.TokenEndpointController).Methods("POST")
+	port := configs.GetConfig().Server.Port
 
 	// Start the server
-	log.Println("Starting server on :", config.PORT)
-	if err := http.ListenAndServe(":" + config.PORT, r); err != nil {
+	log.Println("Starting server on :", port)
+	if err := http.ListenAndServe(":"+port, app); err != nil {
 		log.Fatalf("Error starting server: %v", err)
 	}
 }
