@@ -82,7 +82,9 @@ func tokenHandler(provider fosite.OAuth2Provider) http.HandlerFunc {
 			log.Println("hey pete!")
 		}
 
-		// Check requested scopes
+		// Check and grant requested scopes
+		// This only grants the scopes that are requested by the request.
+		// scope validation happens from the NewAccessRequest method provided by fosite.
 		for _, scope := range accessRequest.GetRequestedScopes() {
 			accessRequest.GrantScope(scope)
 		}

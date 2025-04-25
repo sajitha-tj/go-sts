@@ -2,7 +2,6 @@ package oauth_provider
 
 import (
 	"context"
-	"log"
 	"time"
 
 	"github.com/ory/fosite"
@@ -36,16 +35,11 @@ func NewOauthProvider(storage *storage.Storage) fosite.OAuth2Provider {
 	return oauth2Provider
 }
 
-// keyGetter is a function that retrieves the private key for signing JWT tokens.
+// keyGetter is a function that retrieves the private key needed to sign JWT tokens.
 // It is used by fosite to sign the tokens. This implementation returns private keys based on the issuer.
 func keyGetter(ctx context.Context) (interface{}, error) {
-	issuerId := ctx.Value(configs.CTX_ISSUER_ID_KEY).(string)
-	privateKey, exists := issuer_repository.GetIssuerStoreInstance().GetPrivateKey(issuerId)
-	if !exists {
-		log.Printf("Private key not found for issuer ID: %s", issuerId)
-		return nil, nil
-	}
-	return privateKey, nil
+	issuer := ctx.Value(configs.CTX_ISSUER_KEY).(issuer_repository.Issuer)
+	return issuer.PrivateKey, nil
 }
 
 // JwtConfig is a struct that holds the configuration for JWT.
@@ -55,14 +49,9 @@ type JwtConfig struct {
 	fosite.Config
 }
 
-// GetAccessTokenIssuer retrieves the issuer for the access token from the context.
+// GetAccessTokenIssuer retrieves the iss claim needed for the access token from the context.
 // It is used by fosite to determine the issuer of the access token.
 func (c *JwtConfig) GetAccessTokenIssuer(ctx context.Context) string {
-	issuerId := ctx.Value(configs.CTX_ISSUER_ID_KEY).(string)
-	issuer, exists := issuer_repository.GetIssuerStoreInstance().GetIssuer(issuerId)
-	if !exists {
-		log.Printf("No valid issuer for the ID: %s", issuerId)
-		return "default-issuer"
-	}
+	issuer := ctx.Value(configs.CTX_ISSUER_KEY).(issuer_repository.Issuer)
 	return issuer.IssuerUrl
 }

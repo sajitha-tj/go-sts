@@ -1,5 +1,5 @@
 package configs
 
 const (
-	CTX_ISSUER_ID_KEY = "issuerId"
+	CTX_ISSUER_KEY = "issuer"
 )

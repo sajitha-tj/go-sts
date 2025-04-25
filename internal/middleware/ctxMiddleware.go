@@ -9,6 +9,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/sajitha-tj/go-sts/internal/configs"
+	"github.com/sajitha-tj/go-sts/internal/repository/issuer_repository"
 )
 
 // ctxMiddleware enriches the request context with required data.
@@ -23,7 +24,15 @@ func CtxMiddleware(next http.Handler) http.Handler {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
-		ctx := context.WithValue(r.Context(), configs.CTX_ISSUER_ID_KEY, issuerId)
+
+		issuer, exists := issuer_repository.GetIssuerStoreInstance().GetIssuer(issuerId)
+		if !exists {
+			log.Println("Error occured while trying to read issuerId:", err)
+			http.Error(w, "Issuer not found", http.StatusBadRequest)
+			return
+		}
+
+		ctx := context.WithValue(r.Context(), configs.CTX_ISSUER_KEY, issuer)
 		r = r.WithContext(ctx)
 
 		next.ServeHTTP(w, r)
