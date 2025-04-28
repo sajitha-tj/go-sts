@@ -3,6 +3,7 @@ package routes
 import (
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/gorilla/mux"
 	"github.com/ory/fosite"
@@ -33,12 +34,11 @@ func authorizeHandler(service authentication_service.AuthenticationService, prov
 
 		// Check if the user is authenticated (if !authenticated: return)
 		if !service.HandleAuthentication(w, r, authentication_service.AuthenticationData{
-			ResponseType: ar.GetResponseTypes()[0],
+			ResponseType: strings.Join(ar.GetResponseTypes(), " "),
 			ClientID:     ar.GetClient().GetID(),
 			RedirectURI:  ar.GetRedirectURI().String(),
-			Scope:        ar.GetRequestedScopes()[0],
+			Scope:        strings.Join(ar.GetRequestedScopes(), " "),
 			State:        ar.GetState(),
-			Nonce:        "random_nonce",
 		}) {
 			return
 		}

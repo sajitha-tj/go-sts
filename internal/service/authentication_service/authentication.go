@@ -8,7 +8,7 @@ import (
 	"github.com/sajitha-tj/go-sts/internal/repository/user_repository"
 )
 
-const TEMPLATES_DIR = "/home/sajithaj/my-sts-project/go-sts/internal/templates"
+const TEMPLATES_DIR = "/home/sajithaj/my-sts-project/go-sts/internal/service/authentication_service/templates"
 
 type AuthenticationData struct {
 	ResponseType string
@@ -16,7 +16,6 @@ type AuthenticationData struct {
 	RedirectURI  string
 	Scope        string
 	State        string
-	Nonce        string
 }
 
 type AuthenticationService struct {

@@ -25,12 +25,12 @@ const STATE = "random-state-value"
 const NONCE = "random-nonce-value"
 
 const AUTHORIZATION_URL = "http://123e4567-e89b-12d3-a456-426614174000.localhost:8080/authorize?" +
-						"response_type=" + RESPONSE_TYPE +
-						"&client_id=" + CLIENT_ID +
-						"&redirect_uri=" + REDIRECT_URI +
-						"&scope=" + SCOPE +
-						"&state=" + STATE +
-						"&nonce=" + NONCE
+	"response_type=" + RESPONSE_TYPE +
+	"&client_id=" + CLIENT_ID +
+	"&redirect_uri=" + REDIRECT_URI +
+	"&scope=" + SCOPE +
+	"&state=" + STATE +
+	"&nonce=" + NONCE
 
 const TOKEN_URL = "http://123e4567-e89b-12d3-a456-426614174000.localhost:8080/token"
 
@@ -114,6 +114,7 @@ func handleGetToken(w http.ResponseWriter, r *http.Request) {
 	data.Set("grant_type", "authorization_code")
 	data.Set("client_id", CLIENT_ID)
 	data.Set("client_secret", CLIENT_SECRET)
+	data.Set("scopes", SCOPE)
 
 	req, err := http.NewRequest("POST", TOKEN_URL, bytes.NewBufferString(data.Encode()))
 	if err != nil {
