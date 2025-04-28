@@ -48,15 +48,6 @@ func (s *IssuerStore) GetIssuer(issuerId string) (Issuer, bool) {
 	return issuer, exists
 }
 
-// GetPrivateKey retrieves the private key for a given issuer ID.
-func (s *IssuerStore) GetPrivateKey(issuerId string) (*rsa.PrivateKey, bool) {
-	issuer, exists := s.issuers[issuerId]
-	if !exists {
-		return nil, false
-	}
-	return issuer.PrivateKey, true
-}
-
 // generatePrivateKey generates a new RSA private key.
 func generatePrivateKey() *rsa.PrivateKey {
 	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)

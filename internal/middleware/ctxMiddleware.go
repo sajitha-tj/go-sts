@@ -14,7 +14,7 @@ import (
 
 // ctxMiddleware enriches the request context with required data.
 // Following values are added to the context:
-//   - issuerId: The issuerId extracted from the request's Host header.
+//   - issuer: The issuer object corresponding to the issuerId extracted from the request host.
 func CtxMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Add issuerId to the context of the requst
