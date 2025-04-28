@@ -1,6 +1,8 @@
 package app
 
 import (
+	"log"
+
 	"github.com/gorilla/mux"
 	"github.com/ory/fosite"
 	"github.com/sajitha-tj/go-sts/internal/configs"
@@ -10,6 +12,7 @@ import (
 	"github.com/sajitha-tj/go-sts/internal/service/authentication_service"
 	"github.com/sajitha-tj/go-sts/internal/service/oauth_provider"
 	"github.com/sajitha-tj/go-sts/internal/storage"
+	"github.com/sajitha-tj/go-sts/setup"
 )
 
 type AppDependencies struct {
@@ -39,6 +42,11 @@ func initializeAppDependencies() (*AppDependencies, error) {
 	db, err := db.New(&config.Database)
 	if err != nil {
 		return nil, err
+	}
+
+	// Initialize the temporary database
+	if err := setup.NewTestDB(db).Initialize(); err != nil {
+		log.Fatalf("Error initializing temporary database: %v", err)
 	}
 
 	storage := storage.NewStorage(db)

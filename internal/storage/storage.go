@@ -7,7 +7,6 @@ import (
 	"github.com/sajitha-tj/go-sts/internal/repository/client_repository"
 	"github.com/sajitha-tj/go-sts/internal/repository/session_repository"
 	"github.com/sajitha-tj/go-sts/internal/repository/user_repository"
-	"github.com/sajitha-tj/go-sts/setup"
 )
 
 type Storage struct {
@@ -20,11 +19,6 @@ type Storage struct {
 // NewStorage initializes a new Storage instance with a database connection and stores.
 // Storage instance is responsible for managing the database connection and providing access to the client, user and session stores.
 func NewStorage(db *sql.DB) *Storage {
-	// Initialize the temporary database
-	if err := setup.NewTestDB(db).Initialize(); err != nil {
-		log.Fatalf("Error initializing temporary database: %v", err)
-	}
-
 	clientStore := client_repository.NewClientStore(db)
 	sessionStore := session_repository.NewSessionStore(db)
 	userStore := user_repository.NewUserStore(db)
