@@ -6,8 +6,8 @@ import (
 
 	_ "github.com/lib/pq"
 
-	"github.com/sajitha-tj/go-sts/internal/configs"
 	"github.com/sajitha-tj/go-sts/internal/app"
+	"github.com/sajitha-tj/go-sts/internal/configs"
 )
 
 func main() {
@@ -16,9 +16,9 @@ func main() {
 		log.Fatal("Error loading configs:", err)
 	}
 
-	app, err := app.MakeAPIServer()
+	app, err := app.CreateServer()
 	if err != nil {
-		log.Fatal("Error creating API server:", err)
+		log.Fatal("Error creating STS server:", err)
 	}
 
 	port := configs.GetConfig().Server.Port

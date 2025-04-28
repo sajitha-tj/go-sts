@@ -18,7 +18,7 @@ type AppDependencies struct {
 	authenticationService authentication_service.AuthenticationService
 }
 
-func MakeAPIServer() (*mux.Router, error) {
+func CreateServer() (*mux.Router, error) {
 	deps, err := initializeAppDependencies()
 	if err != nil {
 		return nil, err
@@ -28,7 +28,7 @@ func MakeAPIServer() (*mux.Router, error) {
 
 	r.Use(middleware.CtxMiddleware)
 
-	routes.OAuthRoutes(r, "/", &deps.authenticationService , &deps.oauthProvider)
+	routes.OAuthRoutes(r, "/", &deps.authenticationService, &deps.oauthProvider)
 
 	return r, nil
 }
@@ -40,14 +40,14 @@ func initializeAppDependencies() (*AppDependencies, error) {
 	if err != nil {
 		return nil, err
 	}
-	
+
 	storage := storage.NewStorage(db)
-	
+
 	oauthProvider := oauth_provider.NewOauthProvider(storage)
 	authenticationService := authentication_service.NewAuthenticationService(storage.GetUserStore())
-	
+
 	return &AppDependencies{
-		oauthProvider: oauthProvider,
+		oauthProvider:         oauthProvider,
 		authenticationService: *authenticationService,
 	}, nil
 }
