@@ -151,7 +151,7 @@ func (t *TestDB) populateTables() error {
 			'["http://localhost:3846/callback"]', -- Redirect URIs as JSON array
 			'["implicit", "refresh_token", "authorization_code", "password", "client_credentials"]', -- Grant types as JSON array
 			'["id_token", "code", "token", "id_token token", "code id_token", "code token", "code id_token token"]', -- Response types as JSON array
-			'["fosite", "openid", "photos", "offline"]', -- Scopes as JSON array
+			'["fosite", "openid", "photos", "offline", "offline_access"]', -- Scopes as JSON array
 			false, -- Public
 			'["example_audience"]' -- Audience as JSON array
 		)

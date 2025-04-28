@@ -19,6 +19,7 @@ func NewOauthProvider(storage *storage.Storage) fosite.OAuth2Provider {
 		AccessTokenLifespan:        time.Minute * 30,
 		GlobalSecret:               secret,
 		SendDebugMessagesToClients: true,
+		RefreshTokenScopes:         []string{"offline"},
 	}
 
 	var jwtConfig = &JwtConfig{Config: *fositeConfigs}

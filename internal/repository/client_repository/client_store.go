@@ -20,9 +20,9 @@ func NewClientStore(db *sql.DB) *ClientStore {
 func (cs *ClientStore) GetClient(ctx context.Context, id string) (Client, error) {
 	var client Client
 	query := `
-		SELECT id, secret, rotated_secrets, redirect_uris, grant_types, 
-		       response_types, scopes, public, audience 
-		FROM clients WHERE id = $1`
+	SELECT id, secret, rotated_secrets, redirect_uris, grant_types, 
+	response_types, scopes, public, audience 
+	FROM clients WHERE id = $1`
 	err := cs.db.QueryRowContext(ctx, query, id).Scan(
 		&client.ClientID,
 		&client.ClientSecret,
@@ -65,9 +65,29 @@ func (cs *ClientStore) SetClientAssertionJWT(ctx context.Context, jti string, ex
 	if err != nil {
 		return err
 	}
-
+	
 	// Insert the new JTI
 	insertQuery := "INSERT INTO client_jtis (jti, expiry) VALUES ($1, $2)"
 	_, err = cs.db.ExecContext(ctx, insertQuery, jti, exp)
+	return err
+}
+
+
+func (cs *ClientStore) CreateClient(ctx context.Context, client *Client) error {
+	query := `
+	INSERT INTO clients (id, secret, rotated_secrets, redirect_uris, grant_types, 
+	response_types, scopes, public, audience) 
+	VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`
+	_, err := cs.db.ExecContext(ctx, query,
+		client.ClientID,
+		client.ClientSecret,
+		client.RotatedSecrets,
+		client.RedirectURIs,
+		client.GrantTypes,
+		client.ResponseTypes,
+		client.Scopes,
+		client.Public,
+		client.Audience,
+	)
 	return err
 }

@@ -10,6 +10,7 @@ import (
 	"github.com/sajitha-tj/go-sts/internal/middleware"
 	"github.com/sajitha-tj/go-sts/internal/routes"
 	"github.com/sajitha-tj/go-sts/internal/service/authentication_service"
+	"github.com/sajitha-tj/go-sts/internal/service/dcr_service"
 	"github.com/sajitha-tj/go-sts/internal/service/oauth_provider"
 	"github.com/sajitha-tj/go-sts/internal/storage"
 	"github.com/sajitha-tj/go-sts/setup"
@@ -19,6 +20,7 @@ type AppDependencies struct {
 	// authService
 	oauthProvider         fosite.OAuth2Provider
 	authenticationService authentication_service.AuthenticationService
+	dcrService            dcr_service.DcrService
 }
 
 func CreateServer() (*mux.Router, error) {
@@ -32,6 +34,7 @@ func CreateServer() (*mux.Router, error) {
 	r.Use(middleware.CtxMiddleware)
 
 	routes.OAuthRoutes(r, "/", &deps.authenticationService, &deps.oauthProvider)
+	routes.DcrRoutes(r, "/dcr", &deps.dcrService)
 
 	return r, nil
 }
@@ -53,9 +56,11 @@ func initializeAppDependencies() (*AppDependencies, error) {
 
 	oauthProvider := oauth_provider.NewOauthProvider(storage)
 	authenticationService := authentication_service.NewAuthenticationService(storage.GetUserStore())
+	dcrService := dcr_service.NewDcrService(storage.GetClientStore())
 
 	return &AppDependencies{
 		oauthProvider:         oauthProvider,
 		authenticationService: *authenticationService,
+		dcrService:            *dcrService,
 	}, nil
 }
