@@ -31,6 +31,7 @@ func NewOauthProvider(storage *storage.Storage) fosite.OAuth2Provider {
 		compose.OAuth2AuthorizeExplicitFactory,
 		compose.OAuth2ClientCredentialsGrantFactory,
 		compose.OAuth2StatelessJWTIntrospectionFactory,
+		compose.OAuth2RefreshTokenGrantFactory,
 	)
 
 	return oauth2Provider

@@ -29,24 +29,24 @@ func (ss *SessionStore) CreateSession(ctx context.Context, payload string, sessi
 	switch sessionType {
 	case AuthorizationCodeSessionType:
 		query = `
-            INSERT INTO authorization_code_sessions (id, active, code, requested_at, session_data, client_id)
+            INSERT INTO authorization_code_sessions (id, active, code, requested_at, request_data, client_id)
             VALUES ($1, $2, $3, $4, $5, $6)
         `
 	case AccessTokenSessionType:
 		query = `
-            INSERT INTO access_token_sessions (id, active, signature, requested_at, session_data, client_id)
+            INSERT INTO access_token_sessions (id, active, signature, requested_at, request_data, client_id)
             VALUES ($1, $2, $3, $4, $5, $6)
         `
 	case RefreshTokenSessionType:
 		query = `
-            INSERT INTO refresh_token_sessions (id, active, signature, requested_at, session_data, client_id)
+            INSERT INTO refresh_token_sessions (id, active, signature, requested_at, request_data, client_id)
             VALUES ($1, $2, $3, $4, $5, $6)
         `
 	default:
 		return fosite.ErrInvalidRequest
 	}
 
-	sessionData, e := getSerializedSession(request.GetSession())
+	requestData, e := getSerializedRequest(request)
 	if e != nil {
 		log.Println("Error serializing session data:", e)
 		return e
@@ -59,7 +59,7 @@ func (ss *SessionStore) CreateSession(ctx context.Context, payload string, sessi
 		true, // Active
 		payload,
 		time.Now(),
-		sessionData,
+		requestData,
 		request.GetClient().GetID(),
 	)
 	if err != nil {
@@ -73,19 +73,19 @@ func (s *SessionStore) GetSession(ctx context.Context, payload string, sessionTy
 	switch sessionType {
 	case AuthorizationCodeSessionType:
 		query = `
-			SELECT id, active, code, requested_at, session_data, client_id
+			SELECT id, active, code, requested_at, request_data, client_id
 			FROM authorization_code_sessions
 			WHERE code = $1 AND active = true
 		`
 	case AccessTokenSessionType:
 		query = `
-			SELECT id, active, signature, requested_at, session_data, client_id
+			SELECT id, active, signature, requested_at, request_data, client_id
 			FROM access_token_sessions
 			WHERE signature = $1 AND active = true
 		`
 	case RefreshTokenSessionType:
 		query = `
-			SELECT id, active, signature, requested_at, session_data, client_id
+			SELECT id, active, signature, requested_at, request_data, client_id
 			FROM refresh_token_sessions
 			WHERE signature = $1 AND active = true
 		`
@@ -94,11 +94,11 @@ func (s *SessionStore) GetSession(ctx context.Context, payload string, sessionTy
 	}
 
 	row := s.db.QueryRowContext(ctx, query, payload)
-	var id, clientID, sessionData string
+	var id, clientID, requestData string
 	var active bool
 	var requestedAt time.Time
 
-	err := row.Scan(&id, &active, &payload, &requestedAt, &sessionData, &clientID)
+	err := row.Scan(&id, &active, &payload, &requestedAt, &requestData, &clientID)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, fosite.ErrNotFound
@@ -106,17 +106,24 @@ func (s *SessionStore) GetSession(ctx context.Context, payload string, sessionTy
 		return nil, err
 	}
 
-	if err := deserializeSession(sessionData, session); err != nil {
+	storedRequest := &StoredRequest{}
+	if err := deserializeRequestData(requestData, storedRequest); err != nil {
 		log.Println("Error deserializing session data:", err)
 		return nil, err
 	}
 
-	request := fosite.NewRequest()
-	request.ID = id
-	request.Client = &fosite.DefaultClient{ID: clientID}
-	request.SetSession(session)
-	request.RequestedAt = requestedAt
-
+	request := &fosite.Request{
+		ID:                storedRequest.ID,
+		RequestedAt:       storedRequest.RequestedAt,
+		Client:            storedRequest.Client,
+		RequestedScope:    storedRequest.RequestedScope,
+		GrantedScope:      storedRequest.GrantedScope,
+		Form:              storedRequest.Form,
+		Session:           &storedRequest.Session,
+		RequestedAudience: storedRequest.RequestedAudience,
+		GrantedAudience:   storedRequest.GrantedAudience,
+		Lang:              storedRequest.Lang,
+	}
 	return request, nil
 }
 
@@ -157,14 +164,14 @@ func (s *SessionStore) RotateRefreshToken(ctx context.Context, requestID string,
 	return nil
 }
 
-func getSerializedSession(session fosite.Session) (string, error) {
-	sessionData, err := json.Marshal(session)
+func getSerializedRequest(req any) (string, error) {
+	reqData, err := json.Marshal(req)
 	if err != nil {
 		return "", err
 	}
-	return string(sessionData), nil
+	return string(reqData), nil
 }
 
-func deserializeSession(sessionData string, session fosite.Session) error {
-	return json.Unmarshal([]byte(sessionData), &session)
+func deserializeRequestData(reqData string, req any) error {
+	return json.Unmarshal([]byte(reqData), &req)
 }
