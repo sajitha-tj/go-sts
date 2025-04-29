@@ -15,7 +15,6 @@ func DcrRoutes(router *mux.Router, path string, service *dcr_service.DcrService)
 func registerHandler(service dcr_service.DcrService) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
-
 		service.RegisterClient(w, r, ctx)
 	}
 }

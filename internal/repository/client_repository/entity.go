@@ -1,6 +1,7 @@
 package client_repository
 
 import (
+	"github.com/mohae/deepcopy"
 	"github.com/ory/fosite"
 
 	"github.com/sajitha-tj/go-sts/internal/lib"
@@ -58,4 +59,11 @@ func (c Client) IsPublic() bool {
 // GetAudience returns the allowed audience(s) for this client.
 func (c Client) GetAudience() fosite.Arguments {
 	return fosite.Arguments(c.Audience)
+}
+
+func (c Client) CloneWithSecret(secret string) Client {
+	newClient := deepcopy.Copy(c).(Client)
+	newClient.ClientSecret = secret
+	newClient.RotatedSecrets = nil
+	return newClient
 }

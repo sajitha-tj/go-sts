@@ -1,7 +1,6 @@
 package dcr_service
 
 type ClientRegistrationRequest struct {
-	ClientName    string   `json:"client_name"`
 	ClientID      string   `json:"client_id"`
 	RedirectURIs  []string `json:"redirect_uris"`
 	GrantTypes    []string `json:"grant_types"`
