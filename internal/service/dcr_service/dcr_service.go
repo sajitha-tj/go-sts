@@ -55,7 +55,8 @@ func (d *DcrService) RegisterClient(w http.ResponseWriter, r *http.Request, ctx 
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
 	w.WriteHeader(http.StatusCreated)
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(client)
+	json.NewEncoder(w).Encode(client.CloneWithSecret(secret))
 }
