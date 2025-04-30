@@ -174,7 +174,7 @@ func (s *SessionStore) GetAccessTokenSignatureFromReqId(ctx context.Context, req
 	var query = `
 		SELECT signature
 		FROM ` + AccessTokenSessionsTable + `
-		WHERE req_id = $1
+		WHERE req_id = $1 AND active = true
 	`
 	row := s.db.QueryRowContext(ctx, query, requestID)
 	var signature string
@@ -192,7 +192,7 @@ func (s *SessionStore) GetRefreshTokenSignatureFromReqId(ctx context.Context, re
 	var query = `
 		SELECT signature
 		FROM ` + RefreshTokenSessionsTable + `
-		WHERE req_id = $1
+		WHERE req_id = $1 AND active = true
 	`
 	row := s.db.QueryRowContext(ctx, query, requestID)
 	var signature string
