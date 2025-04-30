@@ -61,9 +61,9 @@ func (t *TestDB) createTables() error {
 	queries := []string{
 		`
 		CREATE TABLE IF NOT EXISTS ` + AuthorizationCodeSessionsTable + ` (
-			id TEXT PRIMARY KEY,
+			code TEXT PRIMARY KEY,
 			active BOOLEAN,
-			code TEXT,
+			req_id TEXT,
 			requested_at TIMESTAMP,
 			request_data JSONB,
 			client_id TEXT
@@ -71,9 +71,9 @@ func (t *TestDB) createTables() error {
 		`,
 		`
 		CREATE TABLE IF NOT EXISTS ` + AccessTokenSessionsTable + ` (
-			id TEXT PRIMARY KEY,
+			signature TEXT PRIMARY KEY,
 			active BOOLEAN,
-			signature TEXT,
+			req_id TEXT,
 			requested_at TIMESTAMP,
 			request_data JSONB,
 			client_id TEXT
@@ -81,9 +81,9 @@ func (t *TestDB) createTables() error {
 		`,
 		`
 		CREATE TABLE IF NOT EXISTS ` + RefreshTokenSessionsTable + ` (
-			id TEXT PRIMARY KEY,
+			signature TEXT PRIMARY KEY,
 			active BOOLEAN,
-			signature TEXT,
+			req_id TEXT,
 			requested_at TIMESTAMP,
 			request_data JSONB,
 			client_id TEXT
@@ -122,21 +122,6 @@ func (t *TestDB) createTables() error {
 
 func (t *TestDB) populateTables() error {
 	queries := []string{
-		// `
-		// INSERT INTO ` + AuthorizationCodeSessionsTable + ` (id, active, code, requested_at, request_data, client_id)
-		// VALUES ('auth_code_1', true, 'code123', CURRENT_TIMESTAMP, 'session_1', 'client_1')
-		// ON CONFLICT DO NOTHING
-		// `,
-		// `
-		// INSERT INTO ` + AccessTokenSessionsTable + ` (id, active, signature, requested_at, request_data, client_id)
-		// VALUES ('access_token_1', true, 'signature123', CURRENT_TIMESTAMP, 'session_1', 'client_1')
-		// ON CONFLICT DO NOTHING
-		// `,
-		// `
-		// INSERT INTO ` + RefreshTokenSessionsTable + ` (id, active, signature, requested_at, request_data, client_id)
-		// VALUES ('refresh_token_1', true, 'signature456', CURRENT_TIMESTAMP, 'session_1', 'client_1')
-		// ON CONFLICT DO NOTHING
-		// `,
 		`
 		INSERT INTO ` + UsersTable + ` (id, username, password, created_at)
 		VALUES ('user_1', 'peter', 'secret', CURRENT_TIMESTAMP)

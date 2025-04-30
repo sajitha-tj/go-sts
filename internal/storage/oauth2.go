@@ -54,15 +54,26 @@ func (s *Storage) DeleteRefreshTokenSession(ctx context.Context, signature strin
 
 func (s *Storage) RotateRefreshToken(ctx context.Context, requestID string, refreshTokenSignature string) error {
 	// Implement logic to rotate the refresh token
-	return s.sessionStore.RotateRefreshToken(ctx, requestID, refreshTokenSignature)
+	if err := s.RevokeRefreshToken(ctx, requestID); err != nil {
+		return err
+	}
+	return s.RevokeAccessToken(ctx, requestID)
 }
 
 func (s *Storage) RevokeRefreshToken(ctx context.Context, requestID string) error {
 	// Implement logic to revoke the refresh token
-	return nil
+	signature, err := s.sessionStore.GetRefreshTokenSignatureFromReqId(ctx, requestID)
+	if err != nil {
+		return err
+	}
+	return s.DeleteRefreshTokenSession(ctx, signature)
 }
 
 func (s *Storage) RevokeAccessToken(ctx context.Context, requestID string) error {
 	// Implement logic to revoke the access token
-	return nil
+	signature, err := s.sessionStore.GetAccessTokenSignatureFromReqId(ctx, requestID)
+	if err != nil {
+		return err
+	}
+	return s.DeleteAccessTokenSession(ctx, signature)
 }
