@@ -1,19 +1,27 @@
 package oauth_provider
 
 import (
-	"context"
 	"time"
 
 	"github.com/ory/fosite"
 	"github.com/ory/fosite/compose"
 
 	"github.com/sajitha-tj/go-sts/internal/configs"
-	"github.com/sajitha-tj/go-sts/internal/repository/issuer_repository"
 	"github.com/sajitha-tj/go-sts/internal/storage"
 )
 
+type Provider interface {
+	GetStorage() *storage.Storage
+	fosite.OAuth2Provider
+}
+
+type OauthProvider struct {
+	storage *storage.Storage
+	fosite.OAuth2Provider
+}
+
 // NewOauthProvider initializes a new fosite OAuth2Provider instance with necessary configurations.
-func NewOauthProvider(storage *storage.Storage) fosite.OAuth2Provider {
+func NewOauthProvider(storage *storage.Storage) Provider {
 	var secret = []byte(configs.GetConfig().FositeConfigs.Secret)
 	var fositeConfigs = &fosite.Config{
 		AccessTokenLifespan:        time.Minute * 30,
@@ -34,15 +42,13 @@ func NewOauthProvider(storage *storage.Storage) fosite.OAuth2Provider {
 		compose.OAuth2RefreshTokenGrantFactory,
 	)
 
-	return oauth2Provider
+	return &OauthProvider{
+		storage:        storage,
+		OAuth2Provider: oauth2Provider,
+	}
 }
 
-// keyGetter is a function that retrieves the private key needed to sign JWT tokens.
-// It is used by fosite to sign the tokens. This implementation returns private keys based on the issuer.
-func keyGetter(ctx context.Context) (interface{}, error) {
-	issuer, ok := ctx.Value(configs.CTX_ISSUER_KEY).(issuer_repository.Issuer)
-	if !ok {
-		return nil, fosite.ErrServerError.WithHint("Failed to retrieve issuer from context")
-	}
-	return issuer.PrivateKey, nil
+// GetStorage returns the storage instance used by the provider.
+func (p *OauthProvider) GetStorage() *storage.Storage {
+	return p.storage
 }

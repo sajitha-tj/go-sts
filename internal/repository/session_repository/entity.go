@@ -11,14 +11,20 @@ import (
 )
 
 type StoredRequest struct {
-	ID                string                   `json:"id" gorethink:"id"`
-	RequestedAt       time.Time                `json:"requestedAt" gorethink:"requestedAt"`
-	Client            client_repository.Client `json:"client" gorethink:"client"`
-	RequestedScope    fosite.Arguments         `json:"scopes" gorethink:"scopes"`
-	GrantedScope      fosite.Arguments         `json:"grantedScopes" gorethink:"grantedScopes"`
-	Form              url.Values               `json:"form" gorethink:"form"`
-	Session           oauth2.JWTSession        `json:"session" gorethink:"session"`
-	RequestedAudience fosite.Arguments         `json:"requestedAudience"`
-	GrantedAudience   fosite.Arguments         `json:"grantedAudience"`
-	Lang              language.Tag             `json:"-"`
+	ID                   string                   `json:"id" gorethink:"id"`
+	RequestedAt          time.Time                `json:"requestedAt" gorethink:"requestedAt"`
+	Client               client_repository.Client `json:"client" gorethink:"client"`
+	RequestedScope       fosite.Arguments         `json:"scopes" gorethink:"scopes"`
+	GrantedScope         fosite.Arguments         `json:"grantedScopes" gorethink:"grantedScopes"`
+	Form                 url.Values               `json:"form" gorethink:"form"`
+	Session              oauth2.JWTSession        `json:"session" gorethink:"session"`
+	RequestedAudience    fosite.Arguments         `json:"requestedAudience"`
+	GrantedAudience      fosite.Arguments         `json:"grantedAudience"`
+	Lang                 language.Tag             `json:"-"`
+	ResponseTypes        fosite.Arguments         `json:"responseTypes" gorethink:"responseTypes"`
+	RedirectURI          *url.URL                 `json:"redirectUri" gorethink:"redirectUri"`
+	State                string                   `json:"state" gorethink:"state"`
+	HandledResponseTypes fosite.Arguments         `json:"handledResponseTypes" gorethink:"handledResponseTypes"`
+	ResponseMode         fosite.ResponseModeType  `json:"ResponseModes" gorethink:"ResponseModes"`
+	DefaultResponseMode  fosite.ResponseModeType  `json:"DefaultResponseMode" gorethink:"DefaultResponseMode"`
 }

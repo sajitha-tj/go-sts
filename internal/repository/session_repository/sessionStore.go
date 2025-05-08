@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	"log"
 	"time"
 
 	"github.com/ory/fosite"
@@ -21,6 +20,7 @@ const (
 	AuthorizationCodeSessionsTable = "authorization_code_sessions"
 	AccessTokenSessionsTable       = "access_token_sessions"
 	RefreshTokenSessionsTable      = "refresh_token_sessions"
+	AuthorizeRequestTable          = "authorize_requests"
 )
 
 type SessionStore struct {
@@ -36,7 +36,7 @@ func (ss *SessionStore) CreateSession(ctx context.Context, payload string, sessi
 	switch sessionType {
 	case AuthorizationCodeSessionType:
 		query = `
-            INSERT INTO `+ AuthorizationCodeSessionsTable +` (code, active, req_id, requested_at, request_data, client_id)
+            INSERT INTO ` + AuthorizationCodeSessionsTable + ` (code, active, req_id, requested_at, request_data, client_id)
             VALUES ($1, $2, $3, $4, $5, $6)
         `
 	case AccessTokenSessionType:
@@ -55,7 +55,6 @@ func (ss *SessionStore) CreateSession(ctx context.Context, payload string, sessi
 
 	requestData, e := serializeRequest(request.Sanitize([]string{}))
 	if e != nil {
-		log.Println("Error serializing session data:", e)
 		return e
 	}
 
@@ -113,7 +112,6 @@ func (s *SessionStore) GetSession(ctx context.Context, payload string, sessionTy
 
 	storedRequest := &StoredRequest{}
 	if err := deserializeRequestData(requestData, storedRequest); err != nil {
-		log.Println("Error deserializing session data:", err)
 		return nil, err
 	}
 
@@ -164,12 +162,6 @@ func (s *SessionStore) InvalidateSession(ctx context.Context, payload string, se
 	return nil
 }
 
-func (s *SessionStore) RotateRefreshToken(ctx context.Context, requestID string, refreshTokenSignature string) error {
-	// Implement logic to rotate the refresh token
-	log.Println("Rotating refresh token...")
-	return nil
-}
-
 func (s *SessionStore) GetAccessTokenSignatureFromReqId(ctx context.Context, requestID string) (string, error) {
 	var query = `
 		SELECT signature
@@ -204,6 +196,110 @@ func (s *SessionStore) GetRefreshTokenSignatureFromReqId(ctx context.Context, re
 		return "", err
 	}
 	return signature, nil
+}
+
+func (s *SessionStore) CreateAuthorizeRequestSession(ctx context.Context, request fosite.Requester) (string, error) {
+	query := `
+		INSERT INTO ` + AuthorizeRequestTable + ` (req_id, request_data, authenticated, requested_at, exp_at)
+		VALUES ($1, $2, $3, $4, $5)
+		ON CONFLICT (req_id) DO UPDATE SET
+		request_data = EXCLUDED.request_data,
+		requested_at = EXCLUDED.requested_at,
+		exp_at = EXCLUDED.exp_at
+	`
+	requestData, err := serializeRequest(request)
+	if err != nil {
+		return "", err
+	}
+	_, err = s.db.ExecContext(
+		ctx,
+		query,
+		request.GetID(),
+		requestData,
+		false, // Authenticated
+		time.Now(),
+		time.Now().Add(time.Minute*5),
+	)
+
+	if err != nil {
+		return "", err
+	}
+	return request.GetID(), nil
+}
+
+func (s *SessionStore) GetAuthorizeRequestSession(ctx context.Context, requestID string) (fosite.AuthorizeRequester, error) {
+	query := `
+		SELECT request_data
+		FROM ` + AuthorizeRequestTable + `
+		WHERE req_id = $1 AND exp_at > $2
+	`
+	row := s.db.QueryRowContext(ctx, query, requestID, time.Now())
+	var requestData string
+	err := row.Scan(&requestData)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, fosite.ErrNotFound
+		}
+		return nil, err
+	}
+
+	storedRequest := &StoredRequest{}
+	if err := deserializeRequestData(requestData, storedRequest); err != nil {
+		return nil, err
+	}
+
+	request := &fosite.AuthorizeRequest{
+		Request: fosite.Request{
+			ID:                storedRequest.ID,
+			RequestedAt:       storedRequest.RequestedAt,
+			Client:            storedRequest.Client,
+			RequestedScope:    storedRequest.RequestedScope,
+			GrantedScope:      storedRequest.GrantedScope,
+			Form:              storedRequest.Form,
+			Session:           &storedRequest.Session,
+			RequestedAudience: storedRequest.RequestedAudience,
+			GrantedAudience:   storedRequest.GrantedAudience,
+			Lang:              storedRequest.Lang,
+		},
+		ResponseTypes:        storedRequest.ResponseTypes,
+		RedirectURI:          storedRequest.RedirectURI,
+		State:                storedRequest.State,
+		HandledResponseTypes: storedRequest.HandledResponseTypes,
+		ResponseMode:         storedRequest.ResponseMode,
+		DefaultResponseMode:  storedRequest.DefaultResponseMode,
+	}
+	return request, nil
+}
+
+func (s *SessionStore) AuthenticateAuthorizeRequestSession(ctx context.Context, requestID string) error {
+	query := `
+		UPDATE ` + AuthorizeRequestTable + `
+		SET authenticated = true
+		WHERE req_id = $1
+	`
+	_, err := s.db.ExecContext(ctx, query, requestID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *SessionStore) IsRequestSessionAuthenticated(ctx context.Context, requestID string) (bool, error) {
+	query := `
+		SELECT authenticated
+		FROM ` + AuthorizeRequestTable + `
+		WHERE req_id = $1
+	`
+	row := s.db.QueryRowContext(ctx, query, requestID)
+	var authenticated bool
+	err := row.Scan(&authenticated)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return false, fosite.ErrNotFound
+		}
+		return false, err
+	}
+	return authenticated, nil
 }
 
 // serializeRequest serializes the request data into a JSON string.

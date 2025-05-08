@@ -13,11 +13,11 @@ func NewUserStore(db *sql.DB) *UserStore {
 }
 
 func (us *UserStore) GetUserByUsername(username string) (*User, error) {
-	query := "SELECT id, username, password FROM users WHERE username = $1"
+	query := "SELECT id, username, password, email FROM users WHERE username = $1"
 	row := us.db.QueryRow(query, username)
 
 	var user User
-	if err := row.Scan(&user.ID, &user.Username, &user.Password); err != nil {
+	if err := row.Scan(&user.ID, &user.Username, &user.Password, &user.Email); err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil
 		}

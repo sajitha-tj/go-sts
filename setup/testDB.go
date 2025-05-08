@@ -16,6 +16,7 @@ const (
 	RefreshTokenSessionsTable      = "refresh_token_sessions"
 	UsersTable                     = "users"
 	ClientsTable                   = "clients"
+	AuthorizeRequestTable          = "authorize_requests"
 )
 
 type TestDB struct {
@@ -47,6 +48,7 @@ func (t *TestDB) dropTables() error {
 		"DROP TABLE IF EXISTS " + RefreshTokenSessionsTable,
 		"DROP TABLE IF EXISTS " + UsersTable,
 		"DROP TABLE IF EXISTS " + ClientsTable,
+		"DROP TABLE IF EXISTS " + AuthorizeRequestTable,
 	}
 
 	for _, query := range queries {
@@ -94,6 +96,7 @@ func (t *TestDB) createTables() error {
 			id TEXT PRIMARY KEY,
 			username TEXT UNIQUE,
 			password TEXT,
+			email TEXT UNIQUE,
 			created_at TIMESTAMP
 		)
 		`,
@@ -110,6 +113,15 @@ func (t *TestDB) createTables() error {
 			audience JSONB
 		)
 		`,
+		`
+		CREATE TABLE IF NOT EXISTS ` + AuthorizeRequestTable + ` (
+			req_id TEXT PRIMARY KEY,
+			request_data JSONB,
+			authenticated BOOLEAN DEFAULT FALSE,
+			requested_at TIMESTAMP,
+			exp_at TIMESTAMP
+		)
+		`,
 	}
 
 	for _, query := range queries {
@@ -123,8 +135,8 @@ func (t *TestDB) createTables() error {
 func (t *TestDB) populateTables() error {
 	queries := []string{
 		`
-		INSERT INTO ` + UsersTable + ` (id, username, password, created_at)
-		VALUES ('user_1', 'peter', 'secret', CURRENT_TIMESTAMP)
+		INSERT INTO ` + UsersTable + ` (id, username, password, email, created_at)
+		VALUES ('user_1', 'peter', 'secret', 'peter@mail.com', CURRENT_TIMESTAMP)
 		ON CONFLICT DO NOTHING
 		`,
 		`
