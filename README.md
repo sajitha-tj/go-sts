@@ -6,10 +6,11 @@
 
 The service supports the following OAuth2 grant types:
 - **Authorization Code Grant**: Used for server-side applications where the client secret is kept confidential.
+- **Client Credentials Grant**: Used for machine-to-machine communication where the client is also the resource owner.
 
 ## Project Structure
 
-```plaintext
+```
 go-sts/
 ├── cmd/                             # Main entry point for the application
 │   └── go-sts/
@@ -32,15 +33,15 @@ go-sts/
 │   │   ├── authentication_service/  # User authentication related services
 │   │   └── oauth_provider/          # Fosite OAuth2 provider setup
 │   └── storage/                     # Fosite's storage interface implementation
-|   └── templates/                   # HTML templates for rendering
+│   └── templates/                   # HTML templates for rendering
 ├── resources/                       # Resource files
 ├── setup/
 │   └── testDB.go                    # Test database setup
 ├── client/                          # OAuth2 client for testing
 ├── docker-compose.yaml              # Docker Compose configuration
-├── go.mod
-├── .env
-└── README.md
+├── go.mod                           # Go module file
+├── .env                             # Environment variables file
+└── README.md                        # Project documentation
 ```
 
 ## Prerequisites
