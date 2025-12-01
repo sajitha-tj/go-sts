@@ -1,6 +1,6 @@
 # go-sts
 
-`go-sts` is a Go-based implementation of a Security Token Service (STS) that supports OAuth2 flows. It is implemented as a PoC (Proof of Concept) and the service is built on top of the [Fosite](github.com/ory/fosite) library, which provides a robust framework for OAuth2 and OpenID Connect.
+`go-sts` is a Go-based implementation of a Security Token Service (STS) that supports OAuth2 flows. It is implemented as a PoC (Proof of Concept) and the service is built on top of the [Fosite](https://github.com/ory/fosite) library, which provides a robust framework for OAuth2 and OpenID Connect.
 
 ## Grant Types
 
